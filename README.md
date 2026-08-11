@@ -41,20 +41,12 @@ Unagi's public feed is hourly (`PT1H`). Settled values are hourly averages of No
 
 ## Installation through HACS
 
-1. Upload this repository to GitHub as a **public repository**.
-2. In `custom_components/unagi/manifest.json`, replace `YOUR_GITHUB_USERNAME` in `documentation` and `issue_tracker` with your GitHub username/repository path.
-3. Optional but recommended before publishing broadly: add your GitHub handle to `codeowners`, for example:
-
-   ```json
-   "codeowners": ["@your-github-name"]
-   ```
-
-4. In HACS, open **Custom repositories**.
-5. Add your repository URL and choose **Integration**.
-6. Install **Unagi Electricity Price Forecast**.
-7. Restart Home Assistant.
-8. Go to **Settings → Devices & services → Add integration → Unagi Electricity Price Forecast**.
-9. Select the bidding area and polling interval.
+1. In HACS, open **Custom repositories**.
+2. Add your repository URL and choose **Integration**.
+3. Install **Unagi Electricity Price Forecast**.
+4. Restart Home Assistant.
+5. Go to **Settings → Devices & services → Add integration → Unagi Electricity Price Forecast**.
+6. Select the bidding area and polling interval.
 
 You may add multiple entries if you want multiple Swedish bidding areas; an individual area can only be configured once.
 
