@@ -1,7 +1,7 @@
 {
   "domain": "unagi",
   "name": "Unagi Electricity Price Forecast",
-  "codeowners": [],
+  "codeowners": ["@sixuniform"]
   "config_flow": true,
   "documentation": "https://github.com/sixuniform/home-assistant-unagi",
   "issue_tracker": "https://github.com/sixuniform/home-assistant-unagi/issues",
