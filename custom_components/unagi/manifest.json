@@ -1,0 +1,10 @@
+{
+  "domain": "unagi",
+  "name": "Unagi Electricity Price Forecast",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/YOUR_GITHUB_USERNAME/home-assistant-unagi",
+  "issue_tracker": "https://github.com/YOUR_GITHUB_USERNAME/home-assistant-unagi/issues",
+  "iot_class": "cloud_polling",
+  "version": "0.1.0"
+}

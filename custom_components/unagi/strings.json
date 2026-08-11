@@ -1,0 +1,29 @@
+{
+  "title": "Unagi Electricity Price Forecast",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Unagi forecast",
+        "description": "Choose the Swedish bidding area and how often Home Assistant may fetch the public Unagi JSON feed. Unagi normally refreshes only a few times per day.",
+        "data": {
+          "area": "Bidding area",
+          "update_interval_hours": "Update interval (hours)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This bidding area is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Unagi options",
+        "description": "Change how often the integration checks the public forecast file. Cached hourly values continue to advance locally between network updates.",
+        "data": {
+          "update_interval_hours": "Update interval (hours)"
+        }
+      }
+    }
+  }
+}
