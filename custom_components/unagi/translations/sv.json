@@ -1,0 +1,29 @@
+{
+  "title": "Unagi elprisprognos",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Lägg till Unagi-prognos",
+        "description": "Välj svenskt elområde och hur ofta Home Assistant får hämta Unagis publika JSON-fil. Unagi uppdateras normalt bara några gånger per dygn.",
+        "data": {
+          "area": "Elområde",
+          "update_interval_hours": "Uppdateringsintervall (timmar)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Detta elområde är redan konfigurerat."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Unagi-inställningar",
+        "description": "Ändra hur ofta integrationen kontrollerar den publika prognosfilen. Cachade timvärden fortsätter att växla lokalt mellan nätverksuppdateringarna.",
+        "data": {
+          "update_interval_hours": "Uppdateringsintervall (timmar)"
+        }
+      }
+    }
+  }
+}
