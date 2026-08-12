@@ -1,0 +1,264 @@
+# Unagi electricity price outlook — example Lovelace dashboard
+#
+# Requires:
+#   - Plotly Graph Card (custom:plotly-graph)
+#   - Unagi integration entity: sensor.unagi_se3
+#
+# If you use another bidding area, replace every occurrence of
+# sensor.unagi_se3 with sensor.unagi_se1 / se2 / se4 as appropriate.
+#
+# The graph uses only Unagi data. It starts at the current time and displays
+# all remaining cached Unagi periods, up to 8 days ahead. Unagi's native
+# hourly resolution is preserved. Prices are displayed in öre/kWh.
+
+views:
+  - title: Unagi Forecast
+    path: unagi-forecast
+    type: sections
+    max_columns: 4
+    sections:
+      - type: grid
+        cards:
+          - type: custom:plotly-graph
+            grid_options:
+              columns: 48
+            # This redraws the graph from Home Assistant's cached entity state.
+            # It does NOT cause an HTTP request to the Unagi source.
+            refresh_interval: 60
+            entities:
+              # Lower edge of Unagi's 80% interval.
+              - entity: sensor.unagi_se3
+                tap_action:
+                  action: none
+                name: ""
+                type: scatter
+                mode: lines
+                x: |
+                  $fn ({hass}) => {
+                    const now = Date.now();
+                    const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                    const points = raw.filter(d => {
+                      const st = new Date(d.start).getTime();
+                      const en = new Date(d.end).getTime();
+                      return Number.isFinite(st) && Number.isFinite(en) && en > now;
+                    });
+                    return points.map(d => new Date((new Date(d.start).getTime() + new Date(d.end).getTime()) / 2));
+                  }
+                "y": |
+                  $fn ({hass}) => {
+                    const now = Date.now();
+                    const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                    return raw
+                      .filter(d => new Date(d.end).getTime() > now)
+                      .map(d => 100 * Number(Number.isFinite(Number(d.low)) ? d.low : d.value));
+                  }
+                line:
+                  width: 0
+                hoverinfo: skip
+                showlegend: false
+
+              # Upper edge + shaded 80% uncertainty interval.
+              - entity: sensor.unagi_se3
+                tap_action:
+                  action: none
+                name: "80% interval"
+                type: scatter
+                mode: lines
+                x: |
+                  $fn ({hass}) => {
+                    const now = Date.now();
+                    const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                    const points = raw.filter(d => {
+                      const st = new Date(d.start).getTime();
+                      const en = new Date(d.end).getTime();
+                      return Number.isFinite(st) && Number.isFinite(en) && en > now;
+                    });
+                    return points.map(d => new Date((new Date(d.start).getTime() + new Date(d.end).getTime()) / 2));
+                  }
+                "y": |
+                  $fn ({hass}) => {
+                    const now = Date.now();
+                    const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                    return raw
+                      .filter(d => new Date(d.end).getTime() > now)
+                      .map(d => 100 * Number(Number.isFinite(Number(d.high)) ? d.high : d.value));
+                  }
+                line:
+                  width: 0
+                fill: tonexty
+                fillcolor: rgba(255,255,255,0.10)
+                hoverinfo: skip
+                showlegend: false
+
+              # Central Unagi value, using the same green→yellow→red price
+              # styling as the YOUEMS price graph.
+              - entity: sensor.unagi_se3
+                tap_action:
+                  action: none
+                name: ""
+                type: bar
+                width: 3060000
+                x: |
+                  $fn ({hass}) => {
+                    const now = Date.now();
+                    const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                    const points = raw.filter(d => {
+                      const st = new Date(d.start).getTime();
+                      const en = new Date(d.end).getTime();
+                      return Number.isFinite(st) && Number.isFinite(en) && en > now;
+                    });
+                    return points.map(d => new Date((new Date(d.start).getTime() + new Date(d.end).getTime()) / 2));
+                  }
+                "y": |
+                  $fn ({hass}) => {
+                    const now = Date.now();
+                    const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                    return raw
+                      .filter(d => new Date(d.end).getTime() > now)
+                      .map(d => 100 * Number(d.value));
+                  }
+                customdata: |
+                  $fn ({hass}) => {
+                    const now = Date.now();
+                    const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                    const points = raw.filter(d => new Date(d.end).getTime() > now);
+                    const pad = n => String(n).padStart(2, '0');
+                    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+                    return points.map(d => {
+                      const s = new Date(d.start);
+                      const e = new Date(d.end);
+                      const label = days[s.getDay()] + ' ' + pad(s.getDate()) + '/' + pad(s.getMonth() + 1)
+                        + ' ' + pad(s.getHours()) + ':' + pad(s.getMinutes())
+                        + '–' + pad(e.getHours()) + ':' + pad(e.getMinutes());
+                      const low = Number.isFinite(Number(d.low)) ? 100 * Number(d.low) : null;
+                      const high = Number.isFinite(Number(d.high)) ? 100 * Number(d.high) : null;
+                      return [low, high, label, d.kind || 'forecast'];
+                    });
+                  }
+                marker:
+                  color: |
+                    $fn ({hass}) => {
+                      const now = Date.now();
+                      const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                      return raw
+                        .filter(d => new Date(d.end).getTime() > now)
+                        .map(d => {
+                          const v = 100 * Number(d.value);
+                          const t = Math.min(Math.max(v / 300, 0), 1);
+                          const hue = Math.round(120 * (1 - t));
+                          const lightness = Math.round(18 + t * 32);
+                          return `hsl(${hue}, 100%, ${lightness}%)`;
+                        });
+                    }
+                hovertemplate: >-
+                  <b>%{customdata[2]}</b><br>%{y:.0f} Öre/kWh<br>80% interval:
+                  %{customdata[0]:.0f}–%{customdata[1]:.0f} Öre/kWh<br>Status:
+                  %{customdata[3]}<extra></extra>
+
+            layout:
+              showlegend: false
+              autosize: true
+              title:
+                text: "Unagi — electricity price outlook"
+                x: 0.01
+                xanchor: left
+                font:
+                  size: 14
+              xaxis:
+                type: date
+                range:
+                  - |
+                    $fn () => new Date()
+                  - |
+                    $fn ({hass}) => {
+                      const now = Date.now();
+                      const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                      const future = raw.filter(d => new Date(d.end).getTime() > now);
+                      const feedEnd = future.length
+                        ? new Date(future[future.length - 1].end).getTime()
+                        : now + 48 * 3600000;
+                      return new Date(Math.min(feedEnd, now + 8 * 24 * 3600000));
+                    }
+                dtick: 21600000
+                tickformat: "%a<br>%d/%m %H:%M"
+                showgrid: false
+              yaxis:
+                side: right
+                title:
+                  text: "Öre/kWh"
+                rangemode: tozero
+                showgrid: true
+                zeroline: true
+              shapes: |
+                $fn ({hass}) => {
+                  const now = Date.now();
+                  const raw = hass.states['sensor.unagi_se3']?.attributes?.raw_forecast || [];
+                  const future = raw.filter(d => new Date(d.end).getTime() > now);
+                  const feedEnd = future.length
+                    ? new Date(future[future.length - 1].end).getTime()
+                    : now + 48 * 3600000;
+                  const end = Math.min(feedEnd, now + 8 * 24 * 3600000);
+
+                  const shapes = [{
+                    type: 'line', xref: 'x', yref: 'paper',
+                    x0: new Date(now), x1: new Date(now), y0: 0, y1: 1,
+                    line: { color: 'deepskyblue', width: 2 }
+                  }];
+
+                  // Midnight separators make the long horizon easier to scan.
+                  const first = new Date(now);
+                  first.setHours(24, 0, 0, 0);
+                  for (let t = first.getTime(); t < end; t += 24 * 3600000) {
+                    shapes.push({
+                      type: 'line', xref: 'x', yref: 'paper',
+                      x0: new Date(t), x1: new Date(t), y0: 0, y1: 1,
+                      line: { color: 'rgba(255,255,255,0.14)', width: 1, dash: 'dot' }
+                    });
+                  }
+                  return shapes;
+                }
+              annotations: |
+                $fn () => {
+                  const now = new Date();
+                  return [
+                    {
+                      x: now,
+                      y: 1,
+                      yref: 'paper',
+                      text: 'Now',
+                      showarrow: false,
+                      xanchor: 'left',
+                      yanchor: 'bottom',
+                      font: { color: 'deepskyblue', size: 11 },
+                      yshift: 4
+                    },
+                    {
+                      x: 0.995,
+                      xref: 'paper',
+                      y: 1,
+                      yref: 'paper',
+                      text: 'Shaded = Unagi 80% interval',
+                      showarrow: false,
+                      xanchor: 'right',
+                      yanchor: 'bottom',
+                      font: { color: 'rgba(255,255,255,0.65)', size: 10 },
+                      yshift: 4
+                    }
+                  ];
+                }
+              dragmode: false
+              hovermode: x
+              hoverdistance: 50
+              bargap: 0.15
+              margin:
+                l: 10
+                r: 55
+                t: 48
+                b: 48
+              paper_bgcolor: transparent
+              plot_bgcolor: transparent
+            config:
+              displayModeBar: false
+              scrollZoom: false
+        column_span: 4
