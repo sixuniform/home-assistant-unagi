@@ -50,6 +50,17 @@ Unagi's public feed is hourly (`PT1H`). Settled values are hourly averages of No
 
 You may add multiple entries if you want multiple Swedish bidding areas; an individual area can only be configured once.
 
+## Example dashboard
+
+A Plotly dashboard for visualizing the speculative Unagi forecast after the
+last available Nord Pool period is included here:
+
+`examples/unagi_speculative_dashboard.yaml`
+
+Requires:
+- Plotly Graph Card
+- This Unagi integration
+
 ## Updating the polling interval
 
 Open **Settings → Devices & services → Unagi → Configure** and select 3, 6, 12 or 24 hours. Home Assistant reloads the integration automatically after the option changes.
